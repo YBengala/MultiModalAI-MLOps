@@ -12,7 +12,10 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
+models/*.pkl
+
 # Virtual environments
 .venv
 .python-version
+
 
