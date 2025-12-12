@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+.coverage
 
 data/raw/*
 data/processed/*
@@ -13,9 +14,8 @@ data/processed/*
 !data/processed/.gitkeep
 
 models/*.pkl
+models/*.pth
 
 # Virtual environments
 .venv
 .python-version
-
-
