@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import numpy as np
 import pytest
+import torch
 
 from multimodal_ai.features.base_image_embedder import BaseImageEmbedder
 from multimodal_ai.features.base_text_embedder import BaseTextEmbedder
@@ -66,3 +68,35 @@ def train_text_encoder() -> TextEncoderTrain:
 
     print("\n[SETUP] Loading TextEncoderTrain (all-MiniLM-L6-v2/CPU)...")
     return TextEncoderTrain(model_name="all-MiniLM-L6-v2", device="cpu", batch_size=2)
+
+
+@pytest.fixture
+def input_dims():
+    """Project dimensions configuration (EfficientVit + MPNet) for shape validation."""
+    return {
+        "n_samples": 8,
+        "img_dim": 2560,
+        "txt_dim": 768,
+        "n_classes": 27,
+    }
+
+
+@pytest.fixture
+def fake_embeddings(input_dims):
+    """Synthetic Numpy embeddings (Image + Text) for fusion logic testing."""
+    np.random.seed(42)
+    img = np.random.rand(input_dims["n_samples"], input_dims["img_dim"]).astype(
+        np.float32
+    )
+    txt = np.random.rand(input_dims["n_samples"], input_dims["txt_dim"]).astype(
+        np.float32
+    )
+    return img, txt
+
+
+@pytest.fixture
+def fused_tensor(input_dims):
+    """Pre-fused PyTorch tensor (3328 dims) for MLP forward pass testing."""
+    torch.manual_seed(42)
+    total_dim = input_dims["img_dim"] + input_dims["txt_dim"]
+    return torch.randn(input_dims["n_samples"], total_dim)
