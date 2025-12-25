@@ -1,3 +1,10 @@
+"""
+Image Feature Extractor :
+    - Base class used for both `ImageEncoderTrain` and `ImageEncoderInfer`.
+    - Input : (B, C, H, W) tensor.
+    - Output : (B, D) numpy embeddings L2-normalized.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -11,15 +18,6 @@ from multimodal_ai.config.settings import settings
 
 
 class BaseImageEmbedder:
-    """Wrapper for timm vision models with automatic preprocessing.
-
-    This class handles the lifecycle of the vision backbone: loading weights,
-    configuring the device (CPU/GPU), setting up the transformation pipeline,
-    and managing batch inference.
-
-    It serves as the parent class for both `ImageEncoderTrain` and `ImageEncoderInfer`.
-    """
-
     def __init__(
         self,
         model_name: str | None = None,
@@ -56,15 +54,6 @@ class BaseImageEmbedder:
         self,
         image_batch: torch.Tensor,
     ) -> np.ndarray:
-        """Encodes preprocessed tensors (B, C, H, W) into (B, D) numpy embeddings.
-
-        Args:
-            image_batch: Transformed tensor. Automatically moved to device.
-
-        Returns:
-            Embeddings array. L2-normalized if configured in __init__.
-        """
-
         embeddings = self.model(image_batch.to(self.device))
 
         if self.normalize_embeddings:
@@ -73,6 +62,4 @@ class BaseImageEmbedder:
         return embeddings.cpu().numpy()
 
     def get_embedding_dim(self) -> int:
-        """Returns the output feature dimension of the loaded backbone."""
-
         return getattr(self.model, "num_features", 0)

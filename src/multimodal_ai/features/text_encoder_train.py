@@ -1,3 +1,11 @@
+"""
+Batch Text Encoder (Training) :
+    - Text feature extraction for training datasets.
+    - Cleans text -> Merges columns -> Encodes in batches.
+    - Input : DataFrame with designation/description columns.
+    - Output :  (N, D) Numpy Array.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -8,25 +16,12 @@ from multimodal_ai.features.text_cleaner import input_text_train
 
 
 class TextEncoderTrain(BaseTextEmbedder):
-    """Batch text encoder for training pipelines.
-
-    Processes DataFrames to generate normalized text embeddings suitable for
-    training or building search indices.
-    """
-
     def __init__(
         self,
         model_name: str | None = None,
         device: str | None = None,
         batch_size: int | None = None,
     ) -> None:
-        """Initializes the training text encoder.
-
-        Args:
-            model_name: SentenceTransformer model name.
-            device: 'cpu' or 'cuda'.
-            batch_size: Batch size for bulk encoding.
-        """
         super().__init__(
             model_name=model_name,
             batch_size=batch_size,
@@ -40,20 +35,6 @@ class TextEncoderTrain(BaseTextEmbedder):
         col_designation: str = "designation",
         col_description: str = "description",
     ) -> np.ndarray:
-        """Generates embeddings for all rows in the DataFrame.
-
-        Applies cleaning and concatenation of designation and description
-        before encoding.
-
-        Args:
-            df: Input DataFrame containing text columns.
-            col_designation: Column name for product titles.
-            col_description: Column name for product descriptions.
-
-        Returns:
-            np.ndarray: Matrix of shape (N, D) containing normalized embeddings.
-        """
-
         if df.empty:
             dim = self.get_embedding_dim()
             return np.empty((0, dim), dtype=np.float32)

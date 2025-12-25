@@ -1,3 +1,13 @@
+"""
+Text Preprocessing Utilities :
+    - Removes (HTML, URLs, SKUs, IDs) to focus on semantic content.
+    - Aggressive cleaning using pre-compiled Regex.
+    - Usage:
+        - `clean_text`: Low-level cleaner.
+        - `prepare_training_data`: Bulk processing for DataFrames.
+        - `prepare_inference_text`: Fast processing for API requests.
+"""
+
 import html
 import re
 from typing import Any
@@ -17,8 +27,6 @@ REGEX_SPACES = re.compile(r"\s+")
 
 
 def clean_text(text: str | Any = None) -> str:
-    """Clean text by removing HTML tags, URLs, emails, product references, codes, long numbers, and extra spaces."""
-
     if text is None or pd.isna(text):
         return ""
     text = html.unescape(str(text)).lower()
@@ -39,7 +47,6 @@ def input_text_train(
     col_desc: str = "description",
 ) -> pd.DataFrame:
     """Clean category designation and description and build unified text field for training."""
-
     designation_clean = df[col_des].apply(clean_text)
     description_clean = df[col_desc].apply(clean_text)
     df["input_text"] = designation_clean.str.cat(description_clean, sep=" ").str.strip()

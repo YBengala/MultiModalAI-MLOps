@@ -1,3 +1,10 @@
+"""
+Text Feature Extractor :
+    - Base class used for both `TextEncoderTrain` and `TextEncoderInfer`.
+    - Input : List of strings (texts).
+    - Output : (N, D) numpy embeddings L2-normalized.
+"""
+
 from __future__ import annotations
 
 from typing import Iterable, cast
@@ -9,12 +16,6 @@ from multimodal_ai.config.settings import settings
 
 
 class BaseTextEmbedder:
-    """Provides text embedding extraction using SentenceTransformer backbones.
-
-    Loads the configured model on the selected device, manages batching, and
-    optionally L2-normalizes output embeddings for cosine-similarity workflows.
-    """
-
     def __init__(
         self,
         model_name: str | None = None,
@@ -39,16 +40,6 @@ class BaseTextEmbedder:
         self,
         text: str | Iterable[str],
     ) -> np.ndarray:
-        """Encode one or more texts into NumPy embeddings.
-
-        Args:
-            text: Single string or iterable of strings to embed.
-
-        Returns:
-            np.ndarray: Array shaped (N, D) where N is the number of inputs and
-            D is the model output dimension.L2-normalized when `normalize_embeddings` is True.
-        """
-
         texts = [text] if isinstance(text, str) else list(text)
         embeddings = self.model.encode(
             texts,
@@ -60,6 +51,4 @@ class BaseTextEmbedder:
         return embeddings
 
     def get_embedding_dim(self) -> int:
-        """Return the embedding dimension reported by the loaded model."""
-
         return cast(int, self.model.get_sentence_embedding_dimension())

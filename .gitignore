@@ -15,6 +15,7 @@ data/processed/*
 
 models/*.pkl
 models/*.pth
+models/*.joblib
 
 # Virtual environments
 .venv

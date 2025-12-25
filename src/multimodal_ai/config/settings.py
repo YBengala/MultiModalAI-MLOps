@@ -4,7 +4,6 @@ from pathlib import Path
 import torch
 from pydantic_settings import BaseSettings
 
-# To avoid deadlocks/parallelism in tokenizers huggingface when using dataloaders with multiprocessing
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
@@ -57,6 +56,16 @@ class Settings(BaseSettings):
 
     def get_batch_size(self, device: str) -> int:
         return self.BATCH_SIZE_GPU if device == "cuda" else self.BATCH_SIZE_CPU
+
+    # ==========================
+    # MLFLOW SETTINGS
+    # ==========================
+    MLFLOW_EXPERIMENT_NAME: str = "Rakuten_Multimodal"
+    MLFLOW_DIR: Path = PROJECT_ROOT / "mlruns"
+
+    @property
+    def MLFLOW_TRACKING_URI(self) -> str:
+        return f"file://{self.MLFLOW_DIR}"
 
 
 settings = Settings()
