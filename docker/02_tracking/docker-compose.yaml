@@ -1,0 +1,66 @@
+services:
+    # PostgreSQL : Mlflow Backend Store
+    db_mlflow:
+        image: postgres:15.15-trixie
+        container_name: rakuten_db_mlflow
+        restart: always
+
+        environment:
+            POSTGRES_USER: ${MLFLOW_DB_USER}
+            POSTGRES_PASSWORD: ${MLFLOW_DB_PASSWORD}
+            POSTGRES_DB: ${MLFLOW_DB_NAME}
+
+        volumes:
+            - pg_mlflow_data:/var/lib/postgresql/data
+
+        networks:
+            - rakuten_net
+
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${MLFLOW_DB_USER} -d ${MLFLOW_DB_NAME}",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    # MinIO : Mlflow Server Artifacts Store
+    mlflow:
+        build: .
+        container_name: rakuten_mlflow
+        restart: always
+        ports:
+            - 5000:5000
+
+        depends_on:
+            db_mlflow:
+                condition: service_healthy
+        env_file: ../../.env
+
+        environment:
+            AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+            AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+            MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL}
+
+        command:
+            - mlflow
+            - server
+            - --backend-store-uri
+            - postgresql://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@db_mlflow:5432/${MLFLOW_DB_NAME}
+            - --default-artifact-root
+            - s3://mlflow
+            - --host
+            - 0.0.0.0
+            - --port
+            - "5000"
+        networks:
+            - rakuten_net
+
+volumes:
+    pg_mlflow_data:
+
+networks:
+    rakuten_net:
+        external: true

@@ -1,0 +1,43 @@
+services:
+    minio:
+        image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+        container_name: rakuten_minio
+        restart: always
+        ports:
+            - "9000:9000" # API
+            - "9001:9001" # Web UI
+        env_file: ../../.env
+
+        command: server /data --console-address ":9001"
+        volumes:
+            - minio_data:/data
+        networks:
+            - rakuten_net
+
+    # Buckets creation
+    createbuckets:
+        image: minio/mc
+        container_name: rakuten_create_buckets
+        depends_on:
+            - minio
+        env_file: ../../.env
+        restart: on-failure
+        entrypoint: >
+            /bin/sh -c "
+            sleep 5;
+            /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+            /usr/bin/mc mb myminio/mlflow;
+            /usr/bin/mc mb myminio/airflow-logs;
+            /usr/bin/mc mb myminio/rakuten-datalake;
+            echo 'Buckets created successfully';
+            exit 0;
+            "
+
+        networks:
+            - rakuten_net
+
+volumes:
+    minio_data:
+networks:
+    rakuten_net:
+        external: true
