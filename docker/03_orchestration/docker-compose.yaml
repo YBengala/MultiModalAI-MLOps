@@ -1,0 +1,110 @@
+x-airflow-common: &airflow-common
+    build: .
+    env_file: ../../.env
+    environment: &airflow-common-env
+        AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@db_airflow/${AIRFLOW_DB_NAME}
+        AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+        AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+        AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+        PYTHONPATH: /opt/airflow
+
+        # MinIO (S3)
+        AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+        AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+        AIRFLOW__AWS__S3_ENDPOINT_URL: http://rakuten-minio:9000
+
+    volumes:
+        - ../../dags:/opt/airflow/dags
+        - ../../src:/opt/airflow/src
+        - airflow_logs:/opt/airflow/logs
+
+    user: "${AIRFLOW_UID:-1000}:0"
+    depends_on:
+        airflow-init:
+            condition: service_completed_successfully
+
+services:
+    # BDD
+    db_airflow:
+        image: postgres:15.15-trixie
+        container_name: rakuten_db_airflow
+        restart: always
+        environment:
+            POSTGRES_USER: ${AIRFLOW_DB_USER}
+            POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD}
+            POSTGRES_DB: ${AIRFLOW_DB_NAME}
+        volumes:
+            - pg_airflow_data:/var/lib/postgresql/data
+        networks:
+            - rakuten_net
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${AIRFLOW_DB_USER} -d ${AIRFLOW_DB_NAME}",
+                ]
+            interval: 10s
+            retries: 5
+
+    # Init Container
+    airflow-init:
+        build: .
+        container_name: rakuten_airflow_init
+        depends_on:
+            db_airflow:
+                condition: service_healthy
+        env_file: ../../.env
+        environment:
+            AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@db_airflow/${AIRFLOW_DB_NAME}
+            AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        entrypoint: /bin/bash
+        command:
+            - -c
+            - |
+                airflow db migrate &&
+                (airflow users create \
+                  --username "${AIRFLOW_ADMIN_USER}" \
+                  --password "${AIRFLOW_ADMIN_PASSWORD}" \
+                  --firstname youssef \
+                  --lastname bengala \
+                  --role Admin \
+                  --email "${AIRFLOW_ADMIN_EMAIL}" 2>/dev/null || echo "User already exists")
+        networks:
+            - rakuten_net
+
+    # Webserver
+    airflow-webserver:
+        <<: *airflow-common
+        container_name: rakuten_airflow_webserver
+        restart: always
+        command: airflow webserver
+        ports:
+            - "8080:8080"
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+            interval: 30s
+            retries: 3
+        networks:
+            - rakuten_net
+
+    # Scheduler
+    airflow-scheduler:
+        <<: *airflow-common
+        container_name: rakuten_airflow_scheduler
+        restart: always
+        command: airflow scheduler
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8974/health"]
+            interval: 30s
+            retries: 5
+        networks:
+            - rakuten_net
+
+volumes:
+    pg_airflow_data:
+    airflow_logs:
+
+networks:
+    rakuten_net:
+        external: true

@@ -12,7 +12,9 @@ services:
         volumes:
             - minio_data:/data
         networks:
-            - rakuten_net
+            rakuten_net:
+                aliases:
+                    - rakuten-minio
 
     # Buckets creation
     createbuckets:
