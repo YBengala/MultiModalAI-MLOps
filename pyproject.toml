@@ -9,6 +9,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "apache-airflow==2.11.0",
+    "apache-airflow-providers-amazon>=9.18.1",
+    "apache-airflow-providers-postgres>=6.5.1",
     "argparse>=1.4.0",
     "matplotlib>=3.10.7",
     "mlflow==3.6.0",
