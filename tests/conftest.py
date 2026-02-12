@@ -75,7 +75,7 @@ def input_dims():
     """Project dimensions configuration (EfficientVit + MPNet) for shape validation."""
     return {
         "n_samples": 8,
-        "img_dim": 2560,
+        "img_dim": 256,
         "txt_dim": 768,
         "n_classes": 27,
     }
@@ -96,7 +96,7 @@ def fake_embeddings(input_dims):
 
 @pytest.fixture
 def fused_tensor(input_dims):
-    """Pre-fused PyTorch tensor (3328 dims) for MLP forward pass testing."""
+    """Pre-fused PyTorch tensor (1024 dims) for MLP forward pass testing."""
     torch.manual_seed(42)
     total_dim = input_dims["img_dim"] + input_dims["txt_dim"]
     return torch.randn(input_dims["n_samples"], total_dim)

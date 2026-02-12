@@ -1,18 +1,10 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "multimodalai_mlops"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "apache-airflow==2.11.0",
-    "apache-airflow-providers-amazon>=9.18.1",
-    "apache-airflow-providers-postgres>=6.5.1",
-    "argparse>=1.4.0",
     "matplotlib>=3.10.7",
     "mlflow==3.6.0",
     "numpy>=2.3.4",
@@ -33,7 +25,6 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.8",
-    "ty>=0.0.1a33",
 ]
 
 [tool.setuptools.packages.find]

@@ -6,7 +6,7 @@ from multimodal_ai.models.fusion_module import FusionEmbeddings, MultimodalMLP
 
 
 def test_fusion_embeddings_shape(fake_embeddings, input_dims):
-    """Verifies that fusion output dimensions match expectations (2560 + 768 = 3328)."""
+    """Verifies that fusion output dimensions match expectations (256 + 768 = 1024)."""
     img, txt = fake_embeddings
     fuser = FusionEmbeddings()
     result = fuser.fuse_embeddings(img, txt)
@@ -28,7 +28,30 @@ def test_fusion_error(input_dims):
 def test_mlp_forward_pass(fused_tensor, input_dims):
     """Validates that the MLP accepts the input tensor and outputs correct class logits."""
     total_dim = input_dims["img_dim"] + input_dims["txt_dim"]
-    model = MultimodalMLP(input_dim=total_dim, num_classes=input_dims["n_classes"])
+    model = MultimodalMLP(
+        input_dim=total_dim,
+        num_classes=input_dims["n_classes"],
+        hidden_l1=1024,
+        hidden_l2=512,
+        hidden_l3=256,
+    )
     output = model(fused_tensor)
     assert output.shape == (input_dims["n_samples"], input_dims["n_classes"])
     assert not torch.isnan(output).any()
+
+
+def test_mlp_custom_activation(fused_tensor, input_dims):
+    """Validates MLP with different activation functions."""
+    total_dim = input_dims["img_dim"] + input_dims["txt_dim"]
+    for activation in [torch.nn.SiLU(), torch.nn.GELU()]:
+        model = MultimodalMLP(
+            input_dim=total_dim,
+            num_classes=input_dims["n_classes"],
+            hidden_l1=512,
+            hidden_l2=256,
+            hidden_l3=128,
+            fn_activation=activation,
+        )
+        output = model(fused_tensor)
+        assert output.shape == (input_dims["n_samples"], input_dims["n_classes"])
+        assert not torch.isnan(output).any()

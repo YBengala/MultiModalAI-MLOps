@@ -1,8 +1,9 @@
 services:
+    # MINIO
     minio:
         image: minio/minio:RELEASE.2025-09-07T16-13-09Z
         container_name: rakuten_minio
-        restart: always
+        restart: unless-stopped
         ports:
             - "9000:9000" # API
             - "9001:9001" # Web UI
@@ -15,31 +16,70 @@ services:
             rakuten_net:
                 aliases:
                     - rakuten-minio
+        healthcheck:
+            test: ["CMD", "mc", "ready", "local"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
     # Buckets creation
     createbuckets:
-        image: minio/mc
+        image: minio/minio:RELEASE.2025-09-07T16-13-09Z
         container_name: rakuten_create_buckets
         depends_on:
-            - minio
+            minio:
+                condition: service_healthy
         env_file: ../../.env
         restart: on-failure
         entrypoint: >
             /bin/sh -c "
-            sleep 5;
             /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-            /usr/bin/mc mb myminio/mlflow;
-            /usr/bin/mc mb myminio/airflow-logs;
-            /usr/bin/mc mb myminio/rakuten-datalake;
-            echo 'Buckets created successfully';
+            /usr/bin/mc mb --ignore-existing myminio/mlflow;
+            /usr/bin/mc mb --ignore-existing myminio/airflow-logs;
+            /usr/bin/mc mb --ignore-existing myminio/rakuten-datalake;
+            echo 'Buckets Ready';
             exit 0;
             "
 
         networks:
             - rakuten_net
 
+    # POSTGRES db Ingestion
+    postgres:
+        image: postgres:17-alpine
+        container_name: rakuten_data_db
+        restart: unless-stopped
+        ports:
+            - "5433:5432"
+        env_file: ../../.env
+
+        environment:
+            POSTGRES_USER: ${RAKUTEN_DB_USER}
+            POSTGRES_PASSWORD: ${RAKUTEN_DB_PASSWORD}
+            POSTGRES_DB: ${RAKUTEN_DB_NAME}
+
+        volumes:
+            - pg_rakuten_data:/var/lib/postgresql/data
+        networks:
+            - rakuten_net
+
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${RAKUTEN_DB_USER} -d ${RAKUTEN_DB_NAME}",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
 volumes:
     minio_data:
+        name: rakuten_vol_minio_data
+
+    pg_rakuten_data:
+        name: rakuten_vol_data_db
+
 networks:
     rakuten_net:
         external: true

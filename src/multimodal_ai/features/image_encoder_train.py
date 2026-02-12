@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import torch
 from torch.utils.data import DataLoader
 
 from multimodal_ai.features.base_image_embedder import BaseImageEmbedder
@@ -48,13 +47,10 @@ class ImageEncoderTrain(BaseImageEmbedder):
 
         img_encodings = []
 
-        with torch.no_grad():
-            for batch in loader:
-                feats = self.encode_tensor_batch(batch)
-                img_encodings.append(feats)
-
-        if len(img_encodings) == 0:
-            dim = self.get_embedding_dim()
-            return np.empty((0, dim), dtype=np.float32)
-
-        return np.vstack(img_encodings)
+        for batch in loader:
+            img_encodings.append(self.encode_tensor_batch(batch))
+        return (
+            np.vstack(img_encodings)
+            if img_encodings
+            else np.empty((0, self.get_embedding_dim()), dtype=np.float32)
+        )

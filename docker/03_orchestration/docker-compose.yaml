@@ -1,5 +1,8 @@
 x-airflow-common: &airflow-common
-    build: .
+    build:
+        context: ../../docker/03_orchestration
+        dockerfile: Dockerfile
+    image: rakuten-airflow:2.11.0-slim-py3.12
     env_file: ../../.env
     environment: &airflow-common-env
         AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -17,6 +20,7 @@ x-airflow-common: &airflow-common
     volumes:
         - ../../dags:/opt/airflow/dags
         - ../../src:/opt/airflow/src
+        - ../../data:/opt/airflow/data
         - airflow_logs:/opt/airflow/logs
 
     user: "${AIRFLOW_UID:-1000}:0"
@@ -27,9 +31,11 @@ x-airflow-common: &airflow-common
 services:
     # BDD
     db_airflow:
-        image: postgres:15.15-trixie
+        image: postgres:17-alpine
         container_name: rakuten_db_airflow
-        restart: always
+        restart: unless-stopped
+        ports:
+            - 5434:5432
         environment:
             POSTGRES_USER: ${AIRFLOW_DB_USER}
             POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD}
@@ -49,7 +55,10 @@ services:
 
     # Init Container
     airflow-init:
-        build: .
+        build:
+            context: ../../docker/03_orchestration
+            dockerfile: Dockerfile
+        image: rakuten-airflow:2.11.0-slim-py3.12
         container_name: rakuten_airflow_init
         depends_on:
             db_airflow:
@@ -77,7 +86,7 @@ services:
     airflow-webserver:
         <<: *airflow-common
         container_name: rakuten_airflow_webserver
-        restart: always
+        restart: unless-stopped
         command: airflow webserver
         ports:
             - "8080:8080"
@@ -92,10 +101,14 @@ services:
     airflow-scheduler:
         <<: *airflow-common
         container_name: rakuten_airflow_scheduler
-        restart: always
+        restart: unless-stopped
         command: airflow scheduler
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:8974/health"]
+            test:
+                [
+                    "CMD-SHELL",
+                    "airflow jobs check --job-type SchedulerJob --hostname $(hostname)",
+                ]
             interval: 30s
             retries: 5
         networks:
@@ -103,7 +116,9 @@ services:
 
 volumes:
     pg_airflow_data:
+        name: rakuten_vol_airflow_db
     airflow_logs:
+        name: rakuten_vol_airflow_logs
 
 networks:
     rakuten_net:

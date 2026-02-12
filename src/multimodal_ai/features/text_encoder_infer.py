@@ -29,11 +29,6 @@ class TextEncoderInfer(BaseTextEmbedder):
         )
 
     def encode_text_infer(
-        self,
-        designation: str,
-        description: str | None = None,
+        self, designation: str, description: str | None = None
     ) -> np.ndarray:
-        text_input = input_text_infer(designation, description)
-        text_infer_feats = self.encode_text(text_input)
-
-        return text_infer_feats[0]
+        return self.encode_text(input_text_infer(designation, description))[0]

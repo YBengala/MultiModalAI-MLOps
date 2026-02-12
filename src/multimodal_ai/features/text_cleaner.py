@@ -47,10 +47,12 @@ def input_text_train(
     col_desc: str = "description",
 ) -> pd.DataFrame:
     """Clean category designation and description and build unified text field for training."""
-    designation_clean = df[col_des].apply(clean_text)
-    description_clean = df[col_desc].apply(clean_text)
-    df["input_text"] = designation_clean.str.cat(description_clean, sep=" ").str.strip()
+    designation_clean = df[col_des].map(clean_text)
+    description_clean = df[col_desc].map(clean_text)
+    df = df.copy()
 
+    df["input_text"] = designation_clean + " " + description_clean
+    df["input_text"] = df["input_text"].str.strip()
     return df
 
 

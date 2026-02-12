@@ -8,10 +8,8 @@ Inference Image Encoder :
 from __future__ import annotations
 
 import io
-from typing import Callable, cast
 
 import numpy as np
-import torch
 from PIL import Image
 
 from multimodal_ai.config.settings import settings
@@ -36,9 +34,6 @@ class ImageEncoderInfer(BaseImageEmbedder):
     def encode_image_bytes(self, image_bytes: bytes) -> np.ndarray:
         # Decodes bytes -> Transforms -> Encodes -> Returns Flat Vector
         img = self._load_image(image_bytes)
-        transform_fn = cast(Callable[[Image.Image], torch.Tensor], self.transform)
-        x = transform_fn(img)
-        x_batch = x.unsqueeze(0)
-        batch_embedding = self.encode_tensor_batch(x_batch)
+        x = self.transform(img).unsqueeze(0)
 
-        return batch_embedding[0]
+        return self.encode_tensor_batch(x)[0]

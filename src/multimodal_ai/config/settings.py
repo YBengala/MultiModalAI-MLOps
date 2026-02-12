@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import torch
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -33,7 +34,7 @@ class Settings(BaseSettings):
     # ==========================
     # TEXT EMBEDDING SETTINGS
     # ==========================
-    TEXT_MODEL_NAME: str = "sentence-transformers/all-mpnet-base-v2"
+    TEXT_MODEL_NAME: str = "OrdalieTech/Solon-embeddings-base-0.1"
     TEXT_NORMALIZE: bool = True
 
     # ==========================
@@ -61,11 +62,40 @@ class Settings(BaseSettings):
     # MLFLOW SETTINGS
     # ==========================
     MLFLOW_EXPERIMENT_NAME: str = "Rakuten_Multimodal"
-    MLFLOW_DIR: Path = PROJECT_ROOT / "mlruns"
+    MLFLOW_TRACKING_URI: str = "http://localhost:5000"
+
+    # ==========================
+    # MINIO SETTINGS
+    # ==========================
+    MINIO_ROOT_USER: str = Field(..., min_length=1)
+    MINIO_ROOT_PASSWORD: str = Field(..., min_length=1)
+    MLFLOW_S3_ENDPOINT_URL: str = "http://localhost:9000"
+
+    # ==========================
+    # DATABASE
+    # ==========================
+    RAKUTEN_DB_USER: str = Field(..., min_length=1)
+    RAKUTEN_DB_PASSWORD: str = Field(..., min_length=1)
+    RAKUTEN_DB_NAME: str = "rakuten_db"
+    RAKUTEN_DB_HOST: str = "localhost"
+    RAKUTEN_DB_PORT: int = 5433
 
     @property
-    def MLFLOW_TRACKING_URI(self) -> str:
-        return f"file://{self.MLFLOW_DIR}"
+    def RAKUTEN_DB_URI(self) -> str:
+        return f"postgresql://{self.RAKUTEN_DB_USER}:{self.RAKUTEN_DB_PASSWORD}@localhost:5433/{self.RAKUTEN_DB_NAME}"
+
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
 
 
-settings = Settings()
+settings = Settings()  # pyright: ignore
+
+if __name__ == "__main__":
+    print("\n=== Loading configuration ===")
+
+    # Display all variables
+    for key, value in settings.model_dump().items():
+        print(f"{key}: {value}")
