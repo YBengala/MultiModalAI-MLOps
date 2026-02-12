@@ -6,6 +6,7 @@ Image Loading Dataset (PyTorch) :
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import pandas as pd
@@ -13,6 +14,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from multimodal_ai.config.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 class ImageDataset(Dataset):
@@ -35,8 +38,8 @@ class ImageDataset(Dataset):
         try:
             image = Image.open(path).convert("RGB")
 
-        except Exception:
-            # white image if error in loading
+        except Exception as e:
+            logger.warning("Image load failed [%s]: %s", path, e)
             image = Image.new(
                 "RGB", (self.image_size, self.image_size), (255, 255, 255)
             )

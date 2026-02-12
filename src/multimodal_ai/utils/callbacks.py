@@ -4,21 +4,27 @@ Early stopping callback for training loop.
 
 import copy
 
+import torch
+
 
 class EarlyStopping:
-    def __init__(self, patience=7, min_delta=1e-4):
+    def __init__(self, patience=7, min_delta=1e-4, save_path: str | None = None):
         self.patience = patience
         self.min_delta = min_delta
         self.best_loss = float("inf")
         self.counter = 0
         self.best_model_state = None
         self.early_stop = False
+        self.save_path = save_path
 
     def __call__(self, val_loss, model):
         if val_loss < self.best_loss - self.min_delta:
             self.best_loss = val_loss
             self.counter = 0
-            self.best_model_state = copy.deepcopy(model.state_dict())
+            if self.save_path:
+                torch.save(model.state_dict(), self.save_path)
+            else:
+                self.best_model_state = copy.deepcopy(model.state_dict())
         else:
             self.counter += 1
             if self.counter >= self.patience:

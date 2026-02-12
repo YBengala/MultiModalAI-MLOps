@@ -1,10 +1,11 @@
 services:
     # PostgreSQL : Mlflow Backend Store
     db_mlflow:
-        image: postgres:15.15-trixie
+        image: postgres:15-alpine
         container_name: rakuten_db_mlflow
-        restart: always
-
+        restart: unless-stopped
+        ports:
+            - 5435:5432
         environment:
             POSTGRES_USER: ${MLFLOW_DB_USER}
             POSTGRES_PASSWORD: ${MLFLOW_DB_PASSWORD}
@@ -26,11 +27,14 @@ services:
             timeout: 5s
             retries: 5
 
-    # MinIO : Mlflow Server Artifacts Store
+    # Mlflow Server Artifacts Store
     mlflow:
-        build: .
+        build:
+            context: ../../docker/02_tracking
+            dockerfile: Dockerfile
+        image: rakuten-mlflow:3.6.0
         container_name: rakuten_mlflow
-        restart: always
+        restart: unless-stopped
         ports:
             - 5000:5000
 
@@ -60,7 +64,7 @@ services:
 
 volumes:
     pg_mlflow_data:
-
+        name: rakuten_vol_mlflow_db
 networks:
     rakuten_net:
         external: true

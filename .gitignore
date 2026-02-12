@@ -9,6 +9,7 @@ wheels/
 
 data/raw/*
 data/processed/*
+data/batches/*
 
 !data/raw/.gitkeep
 !data/processed/.gitkeep
@@ -18,5 +19,6 @@ models/*.pth
 models/*.joblib
 
 # Virtual environments
+.env
 .venv
 .python-version

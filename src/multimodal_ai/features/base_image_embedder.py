@@ -7,6 +7,8 @@ Image Feature Extractor :
 
 from __future__ import annotations
 
+from typing import Any, Callable
+
 import numpy as np
 import torch
 from timm.data.config import resolve_data_config
@@ -25,7 +27,6 @@ class BaseImageEmbedder:
         batch_size: int | None = None,
         normalize_embeddings: bool | None = None,
     ) -> None:
-        # Initialize configuration
         self.device = device or settings.DEFAULT_DEVICE
         self.batch_size = batch_size or settings.get_batch_size(self.device)
         self.normalize_embeddings = (
@@ -33,32 +34,30 @@ class BaseImageEmbedder:
             if normalize_embeddings is not None
             else settings.IMAGE_NORMALIZE
         )
-
-        # Load Vision Transformer model
         name = model_name or settings.IMAGE_MODEL_NAME
         self.model_name = name
         self.model = create_model(name, pretrained=True, num_classes=0)
         self.model.to(self.device)
         self.model.eval()
 
-        # Transformation
         self.model_cfg = resolve_data_config(
             self.model.pretrained_cfg,
             model=self.model,
         )
-
-        self.transform = create_transform(**self.model_cfg, is_training=False)
+        transform = create_transform(**self.model_cfg, is_training=False)
+        if isinstance(transform, tuple):
+            transform = transform[0]
+        self.transform: Callable[..., Any] = transform
 
     @torch.no_grad()
+    @torch.inference_mode()
     def encode_tensor_batch(
         self,
         image_batch: torch.Tensor,
     ) -> np.ndarray:
-        embeddings = self.model(image_batch.to(self.device))
-
+        embeddings = self.model(image_batch.to(self.device, non_blocking=True))
         if self.normalize_embeddings:
             embeddings = normalize(embeddings, p=2, dim=1)
-
         return embeddings.cpu().numpy()
 
     def get_embedding_dim(self) -> int:

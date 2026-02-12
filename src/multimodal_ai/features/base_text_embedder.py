@@ -27,7 +27,7 @@ class BaseTextEmbedder:
         self.model_name = model_name or settings.TEXT_MODEL_NAME
         self.device = device or settings.DEFAULT_DEVICE
         self.batch_size = batch_size or settings.get_batch_size(self.device)
-        self.normalize_sentence = (
+        self.normalize_embeddings = (
             normalize_embeddings
             if normalize_embeddings is not None
             else settings.TEXT_NORMALIZE
@@ -45,7 +45,7 @@ class BaseTextEmbedder:
             texts,
             batch_size=self.batch_size,
             show_progress_bar=False,
-            normalize_embeddings=self.normalize_sentence,
+            normalize_embeddings=self.normalize_embeddings,
             convert_to_numpy=True,
         )
         return embeddings

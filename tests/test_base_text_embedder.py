@@ -9,7 +9,7 @@ from multimodal_ai.features.base_text_embedder import BaseTextEmbedder
 def test_fixture_configuration(text_embedder: BaseTextEmbedder):
     """Verifies the shared fixture configuration (CPU, normalization, batch size)."""
     assert text_embedder.device == "cpu"
-    assert text_embedder.normalize_sentence is True
+    assert text_embedder.normalize_embeddings is True
     assert text_embedder.batch_size == 3
     assert text_embedder.model is not None
 
@@ -19,7 +19,7 @@ def test_default_initialization():
     embedder = BaseTextEmbedder()
     assert embedder.device == settings.DEFAULT_DEVICE
     assert embedder.model_name == settings.TEXT_MODEL_NAME
-    assert embedder.normalize_sentence == settings.TEXT_NORMALIZE
+    assert embedder.normalize_embeddings == settings.TEXT_NORMALIZE
 
 
 def test_get_embedding_dim(text_embedder: BaseTextEmbedder):
