@@ -17,6 +17,7 @@ data/batches/*
 models/*.pkl
 models/*.pth
 models/*.joblib
+models/*.db
 
 # Virtual environments
 .env
