@@ -27,7 +27,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from multimodal_ai.config.settings import settings
 from multimodal_ai.models.fusion_module import MultimodalMLP
-from multimodal_ai.utils.callbacks import EarlyStopping
+from multimodal_ai.training.callbacks import EarlyStopping
 
 logger = logging.getLogger(__name__)
 

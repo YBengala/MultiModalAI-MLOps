@@ -25,11 +25,15 @@ help:  ## Show this help message
 
 up:  ## Start the stack (force build)
 		@echo "Starting $(PROJECT_NAME)..."
-		$(COMPOSE_CMD) up -d --build
+		$(COMPOSE_CMD) up -d
 		@echo "✅ Stack is up! Services available at:"
 		@echo "   - Airflow : http://localhost:8080"
 		@echo "   - MLflow  : http://localhost:5000"
 		@echo "   - MinIO   : http://localhost:9001"
+
+rebuild:  ## Rebuild the stack
+		@echo "Rebuilding $(PROJECT_NAME)..."
+		$(COMPOSE_CMD) build --no-cache
 
 down:  ## Stop the stack and remove containers
 		@echo "🛑 Stopping $(PROJECT_NAME)..."

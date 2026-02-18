@@ -1,8 +1,7 @@
 """
 Inference Text Encoder :
     - Single Product Processing.
-    - Cleaning (HTML/Regex) -> Merging -> Encoding.
-    - Input : Designation (str) + Description (str).
+    - Input : pre-cleaned text (str).
     - Output : 1D Numpy Array (Embedding vector).
 """
 
@@ -11,7 +10,6 @@ from __future__ import annotations
 import numpy as np
 
 from multimodal_ai.features.base_text_embedder import BaseTextEmbedder
-from multimodal_ai.features.text_cleaner import input_text_infer
 
 
 class TextEncoderInfer(BaseTextEmbedder):
@@ -28,7 +26,5 @@ class TextEncoderInfer(BaseTextEmbedder):
             normalize_embeddings=True,
         )
 
-    def encode_text_infer(
-        self, designation: str, description: str | None = None
-    ) -> np.ndarray:
-        return self.encode_text(input_text_infer(designation, description))[0]
+    def encode_text_infer(self, text: str) -> np.ndarray:
+        return self.encode_text(text)[0]

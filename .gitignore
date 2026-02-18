@@ -7,13 +7,16 @@ wheels/
 *.egg-info
 .coverage
 
+# Data
 data/raw/*
 data/processed/*
-data/batches/*
-
+data/embeddings/*
+data/tmp/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/embeddings/.gitkeep
 
+# Models
 models/*.pkl
 models/*.pth
 models/*.joblib
