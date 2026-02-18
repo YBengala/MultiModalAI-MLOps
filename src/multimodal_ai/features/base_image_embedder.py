@@ -49,7 +49,6 @@ class BaseImageEmbedder:
             transform = transform[0]
         self.transform: Callable[..., Any] = transform
 
-    @torch.no_grad()
     @torch.inference_mode()
     def encode_tensor_batch(
         self,

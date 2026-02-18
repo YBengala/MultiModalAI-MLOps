@@ -60,8 +60,11 @@ services:
 
         volumes:
             - pg_rakuten_data:/var/lib/postgresql/data
+            - ./init:/docker-entrypoint-initdb.d
         networks:
-            - rakuten_net
+            rakuten_net:
+                aliases:
+                    - rakuten-postgres
 
         healthcheck:
             test:

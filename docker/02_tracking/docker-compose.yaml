@@ -33,7 +33,7 @@ services:
             context: ../../docker/02_tracking
             dockerfile: Dockerfile
         image: rakuten-mlflow:3.6.0
-        container_name: rakuten_mlflow
+        container_name: rakuten-mlflow
         restart: unless-stopped
         ports:
             - 5000:5000
@@ -48,17 +48,13 @@ services:
             AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
             MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL}
 
-        command:
-            - mlflow
-            - server
-            - --backend-store-uri
-            - postgresql://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@db_mlflow:5432/${MLFLOW_DB_NAME}
-            - --default-artifact-root
-            - s3://mlflow
-            - --host
-            - 0.0.0.0
-            - --port
-            - "5000"
+        command: >
+            mlflow server
+            --backend-store-uri postgresql://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@db_mlflow:5432/${MLFLOW_DB_NAME}
+            --default-artifact-root s3://mlflow
+            --host 0.0.0.0
+            --port 5000
+            --allowed-hosts 'rakuten-mlflow,rakuten-mlflow:5000,localhost,localhost:5000,127.0.0.1,127.0.0.1:5000'
         networks:
             - rakuten_net
 

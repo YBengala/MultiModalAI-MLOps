@@ -10,18 +10,21 @@ x-airflow-common: &airflow-common
         AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
         AIRFLOW__CORE__LOAD_EXAMPLES: "False"
         AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
-        PYTHONPATH: /opt/airflow
+        PYTHONPATH: /opt/airflow:/opt/airflow/src
+        MLFLOW_TRACKING_URI: http://rakuten-mlflow:5000
 
         # MinIO (S3)
         AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
         AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
         AIRFLOW__AWS__S3_ENDPOINT_URL: http://rakuten-minio:9000
+        REPO_DIR: /opt/airflow/repo
 
     volumes:
         - ../../dags:/opt/airflow/dags
         - ../../src:/opt/airflow/src
-        - ../../data:/opt/airflow/data
+        - ../../data:/data # ../../data:/opt/airflow/data
         - airflow_logs:/opt/airflow/logs
+        - ../../:/opt/airflow/repo
 
     user: "${AIRFLOW_UID:-1000}:0"
     depends_on:
@@ -78,7 +81,11 @@ services:
                   --firstname youssef \
                   --lastname bengala \
                   --role Admin \
-                  --email "${AIRFLOW_ADMIN_EMAIL}" 2>/dev/null || echo "User already exists")
+                  --email "${AIRFLOW_ADMIN_EMAIL}" 2>/dev/null || echo "User already exists") && airflow connections add minio_s3 \
+                            --conn-type aws \
+                            --conn-login "${MINIO_ROOT_USER}" \
+                            --conn-password "${MINIO_ROOT_PASSWORD}" \
+                            --conn-extra '{"endpoint_url": "http://rakuten-minio:9000"}' 2>/dev/null || true
         networks:
             - rakuten_net
 

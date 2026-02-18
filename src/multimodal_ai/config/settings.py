@@ -45,6 +45,16 @@ class Settings(BaseSettings):
     IMAGE_SIZE: int = 224
 
     # ==========================
+    # EMBEDDING DIMENSIONS
+    # ==========================
+    TEXT_EMBEDDING_DIM: int = 768  # Solon output dim
+    IMAGE_EMBEDDING_DIM: int = 384  # EfficientViT output dim
+
+    @property
+    def fusion_dim(self) -> int:
+        return self.TEXT_EMBEDDING_DIM + self.IMAGE_EMBEDDING_DIM
+
+    # ==========================
     # DEVICE & BATCH CONFIG
     # ==========================
     DEFAULT_DEVICE: str = "cuda" if torch.cuda.is_available() else "cpu"
