@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from multimodal_ai.utils.callbacks import EarlyStopping
+from multimodal_ai.training.callbacks import EarlyStopping
 
 
 def _make_model() -> nn.Linear:

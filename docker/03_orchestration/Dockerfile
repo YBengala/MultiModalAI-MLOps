@@ -27,4 +27,7 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
     Pillow \
     pydantic-settings \
     python-dotenv \
-    boto3
+    boto3 \
+    optuna \
+    scikit-learn \
+    joblib

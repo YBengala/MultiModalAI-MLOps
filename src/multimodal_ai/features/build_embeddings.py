@@ -1,12 +1,6 @@
 """
-Embedding Pipeline – Step 4 of Rakuten MLOps Pipeline
-=====================================================
 Reads processed CSV, generates text + image embeddings incrementally,
-appends to /data/embeddings/embeddings.parquet via /data/tmp/.
-
-Uses existing encoders:
-    - BaseTextEmbedder (sentence-transformers, Solon)
-    - ImageEncoderTrain (timm, EfficientViT)
+appends to /data/embeddings/embeddings.parquet via /data/tmp/
 """
 
 import logging
@@ -129,7 +123,7 @@ def build_batch_parquet(
     return tmp_path
 
 
-# Append batch to main embeddings Parquet (with dedup on product update)
+# Append batch to main embeddings Parquet (with deduplication on product update)
 def append_to_embeddings(batch_path: Path) -> int:
     """
     Append the batch Parquet to the main embeddings file.

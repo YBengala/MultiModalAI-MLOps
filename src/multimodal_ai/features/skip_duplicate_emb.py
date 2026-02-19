@@ -28,12 +28,15 @@ def has_new_products(processed_csv: Path) -> bool:
         logger.warning("Could not read embeddings file: %s → embed all", e)
         return True
 
-    new_ids = batch_ids - existing_ids
-    if new_ids:
-        logger.info(
-            "Found %d new products to embed (out of %d)", len(new_ids), len(batch_ids)
-        )
-        return True
+    if not batch_ids:
+        logger.info("No products in batch → SKIP")
+        return False
 
-    logger.info("All %d products already embedded → SKIP", len(batch_ids))
-    return False
+    new_ids = batch_ids - existing_ids
+    already_embedded = batch_ids & existing_ids
+    logger.info(
+        "Batch: %d new products, %d to re-embed (content may have changed)",
+        len(new_ids),
+        len(already_embedded),
+    )
+    return True

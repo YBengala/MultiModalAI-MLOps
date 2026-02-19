@@ -72,6 +72,8 @@ class Settings(BaseSettings):
     # MLFLOW SETTINGS
     # ==========================
     MLFLOW_EXPERIMENT_NAME: str = "Rakuten_Multimodal"
+    MLFLOW_TRAINING_EXPERIMENT_NAME: str = "Rakuten_Multimodal_Training"
+    MLFLOW_TUNING_EXPERIMENT_NAME: str = "Rakuten_Multimodal_Tuning"
     MLFLOW_TRACKING_URI: str = "http://localhost:5000"
 
     # ==========================
@@ -92,7 +94,11 @@ class Settings(BaseSettings):
 
     @property
     def RAKUTEN_DB_URI(self) -> str:
-        return f"postgresql://{self.RAKUTEN_DB_USER}:{self.RAKUTEN_DB_PASSWORD}@localhost:5433/{self.RAKUTEN_DB_NAME}"
+        return f"postgresql://{self.RAKUTEN_DB_USER}:{self.RAKUTEN_DB_PASSWORD}@{self.RAKUTEN_DB_HOST}:{self.RAKUTEN_DB_PORT}/{self.RAKUTEN_DB_NAME}"
+
+    @property
+    def OPTUNA_STORAGE_URI(self) -> str:
+        return f"postgresql://{self.RAKUTEN_DB_USER}:{self.RAKUTEN_DB_PASSWORD}@{self.RAKUTEN_DB_HOST}:{self.RAKUTEN_DB_PORT}/{self.RAKUTEN_DB_NAME}"
 
     model_config = {
         "env_file": ".env",

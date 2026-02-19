@@ -7,6 +7,7 @@ ENV_FILE := .env
 FILE_STORAGE := ./docker/01_storage/docker-compose.yaml
 FILE_TRACKING := ./docker/02_tracking/docker-compose.yaml
 FILE_ORCHESTRATION := ./docker/03_orchestration/docker-compose.yaml
+FILE_INFERENCE := ./docker/04_inference/docker-compose.yaml
 
 # Docker Compose command
 COMPOSE_CMD := docker compose \
@@ -14,7 +15,8 @@ COMPOSE_CMD := docker compose \
 	-p $(PROJECT_NAME) \
 	-f $(FILE_STORAGE) \
 	-f $(FILE_TRACKING) \
-	-f $(FILE_ORCHESTRATION)
+	-f $(FILE_ORCHESTRATION) \
+	-f $(FILE_INFERENCE)
 
 	# Par défaut, si on tape juste "make", on affiche l'aide
 .DEFAULT_GOAL := help
@@ -27,9 +29,10 @@ up:  ## Start the stack (force build)
 		@echo "Starting $(PROJECT_NAME)..."
 		$(COMPOSE_CMD) up -d
 		@echo "✅ Stack is up! Services available at:"
-		@echo "   - Airflow : http://localhost:8080"
-		@echo "   - MLflow  : http://localhost:5000"
-		@echo "   - MinIO   : http://localhost:9001"
+		@echo "   - Airflow   : http://localhost:8080"
+		@echo "   - MLflow    : http://localhost:5000"
+		@echo "   - MinIO     : http://localhost:9001"
+		@echo "   - Inference : http://localhost:8000"
 
 rebuild:  ## Rebuild the stack
 		@echo "Rebuilding $(PROJECT_NAME)..."
