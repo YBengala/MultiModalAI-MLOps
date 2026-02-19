@@ -31,3 +31,9 @@ CREATE TABLE IF NOT EXISTS products_processed (
 
 CREATE INDEX IF NOT EXISTS idx_processed_prdtypecode ON products_processed(prdtypecode);
 CREATE INDEX IF NOT EXISTS idx_processed_batch ON products_processed(batch_id);
+
+-- Latest version of each product (most recent batch wins)
+CREATE OR REPLACE VIEW products_latest AS
+SELECT DISTINCT ON (productid) *
+FROM products_processed
+ORDER BY productid, dt_processed DESC;

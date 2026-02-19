@@ -1,0 +1,39 @@
+services:
+    inference:
+        build:
+            context: ../../docker/04_inference
+            dockerfile: Dockerfile
+        image: rakuten-inference:0.129.0-py3.12
+        container_name: rakuten_inference
+        restart: unless-stopped
+        ports:
+            - "8000:8000"
+        env_file: ../../.env
+        environment:
+            # MLflow
+            MLFLOW_TRACKING_URI: http://rakuten-mlflow:5000
+
+            # MinIO (S3 artifact store)
+            AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+            AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+            MLFLOW_S3_ENDPOINT_URL: http://rakuten-minio:9000
+
+            # App
+            PYTHONPATH: /app/src
+
+        volumes:
+            - ../../src:/app/src
+
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 120s
+
+        networks:
+            - rakuten_net
+
+networks:
+    rakuten_net:
+        external: true

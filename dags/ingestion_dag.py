@@ -17,6 +17,7 @@ from pathlib import Path
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowSkipException
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
+from dag_datasets import EMBEDDINGS_DATASET
 
 # DAG Configuration
 MINIO_CONN_ID = "minio_s3"
@@ -331,7 +332,7 @@ def rakuten_ingestion_dag():
         return metadata
 
     # STEP 6: DVC VERSIONING
-    @task()
+    @task(outlets=[EMBEDDINGS_DATASET])
     def version_data(metadata: dict) -> None:
         """Version data/raw, data/processed, data/embeddings with DVC → MinIO."""
         from multimodal_ai.versioning.dvc_versioning import version_pipeline_data
