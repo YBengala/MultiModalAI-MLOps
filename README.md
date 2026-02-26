@@ -1,16 +1,16 @@
 # MultiModalAI MLOps
 
+![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white) ![PyTorch](https://img.shields.io/badge/PyTorch-2.x-ee4c2c?logo=pytorch&logoColor=white) ![Airflow](https://img.shields.io/badge/Airflow-2.x-017cee?logo=apacheairflow&logoColor=white) ![MLflow](https://img.shields.io/badge/MLflow-3.6-0194e2?logo=mlflow&logoColor=white) ![DVC](https://img.shields.io/badge/DVC-945dd6?logo=dvc&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ed?logo=docker&logoColor=white) ![HuggingFace](https://img.shields.io/badge/HuggingFace-FF9D0B?logo=huggingface&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white) ![Optuna](https://img.shields.io/badge/Optuna-171157?logo=optuna&logoColor=white) ![License](https://img.shields.io/badge/license-MIT-green)
+
 End-to-end MLOps pipeline for multimodal e-commerce product classification (text + image) — ingestion, training, inference and monitoring.
 
-> **27 classes · 84 916 products · F1-macro 0.8325 · imbalance ratio 13.4×**
+> **27 classes · 50 950 products · F1-macro 0.8188 · imbalance ratio 13.4×**
 
 ---
 
 ## Overview
 
 This project implements a production-grade MLOps pipeline for classifying Rakuten e-commerce products using both text (designation + description) and image data. The full pipeline — from raw data ingestion to model serving — runs on a single machine via Docker Compose. Hyperparameter optimization is handled by Optuna (20 trials, TPE sampler) with automatic model promotion based on F1-macro.
-
-See the [Pipeline Architecture](#pipeline-architecture) diagram below for a full overview.
 
 ---
 
@@ -20,7 +20,6 @@ See the [Pipeline Architecture](#pipeline-architecture) diagram below for a full
 
 ![Pipeline Architecture](docs/architecture_pipeline.png)
 
-> Source: [`docs/rakuten_mlops_v5.drawio`](docs/rakuten_mlops_v5.drawio)
 
 ### Model
 
@@ -65,7 +64,6 @@ All services communicate over a shared Docker bridge network (`rakuten_net`).
 
 ![Docker architecture](docs/docker_architecture.png)
 
-> Source: [`docs/docker_architecture.drawio`](docs/docker_architecture.drawio)
 
 ---
 
@@ -73,52 +71,15 @@ All services communicate over a shared Docker bridge network (`rakuten_net`).
 
 ### Ingestion DAG (`rakuten_ingestion`)
 
-```mermaid
-flowchart LR
-    WZ([wait_zip\nS3KeySensor · 24h]) --> A([detect_zip\nMinIO incoming/])
-    A --> B([download_extract\nCSV + images])
-    B --> C([archive_zip\n+ cleanup_task])
-    C --> D{batch already\nprocessed?}
-    D -->|yes| SK([skip])
-    D -->|no| E([load_postgres\nproducts_raw])
-    E --> F([transform\ntext clean · img validation])
-    E --> G([upload_images\nMinIO · idempotent])
-    F --> H([quality_checks\nvolume · match rate · coverage])
-    G --> H
-    H --> I([save_processed\nCSV + PostgreSQL])
-    I --> J{new products\nto embed?}
-    J -->|no| SK2([skip embedding])
-    J -->|yes| K([generate_embeddings\nsentence-transformers · EfficientViT])
-    K --> L([append_embeddings\nlatest per product_id])
-    L --> M([log_to_mlflow\nmetrics · artifacts])
-    M --> N([version_dvc\npush to MinIO · emit_signal 🔔])
+![Ingestion DAG](docs/dag_ingestion.png)
 
-    style WZ fill:#1a3a2a,stroke:#34d399,color:#e2e8f0
-    style SK fill:#374151,stroke:#6b7280,color:#9ca3af
-    style SK2 fill:#374151,stroke:#6b7280,color:#9ca3af
-    style N fill:#0f2744,stroke:#38bdf8,color:#38bdf8
-```
 
 ### Training DAG (`rakuten_training`)
 
 Triggered automatically via [Airflow Datasets](https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/datasets.html) when ingestion completes.
 
-```mermaid
-flowchart LR
-    S([EMBEDDINGS_DATASET\nsignal 🔔]) --> H([hpo_optuna\n20 trials · TPE · F1-macro])
-    H --> G{batch already\nin Production?}
-    G -->|yes| SK([skip_training])
-    G -->|no| T([final_training\nEarlyStopping · class weights])
-    T --> M([mlflow_tracking\nmetrics · params · git_sha])
-    M --> P{F1-macro >\nProduction?}
-    P -->|yes| PR([promote\nto Production])
-    P -->|no| AR([archive])
+![Training DAG](docs/dag_training.png)
 
-    style S fill:#0f2744,stroke:#38bdf8,color:#38bdf8
-    style SK fill:#374151,stroke:#6b7280,color:#9ca3af
-    style AR fill:#374151,stroke:#6b7280,color:#9ca3af
-    style PR fill:#1a3a2a,stroke:#34d399,color:#e2e8f0
-```
 
 ### Notable design decisions
 
@@ -270,33 +231,28 @@ curl -X POST http://localhost:8000/predict \
 | **Pipeline & Architecture** | Pipeline diagram, tech stack, MLflow dashboard (F1 history, hyperparams) |
 | **Monitoring** | Production predictions — class distribution, confidence levels, volume over time |
 
----
+### Prediction Demo
+![Prediction Demo](docs/screenshots/demo.png)
 
-## Tech Stack
+### Product Gallery
+![Product Gallery](docs/screenshots/gallery.png)
 
-| Category | Technology |
-|---|---|
-| Orchestration | Apache Airflow |
-| Experiment tracking | MLflow |
-| Data versioning | DVC |
-| Object storage | MinIO (S3-compatible) |
-| Database | PostgreSQL |
-| Deep learning | PyTorch, sentence-transformers, timm (EfficientViT) |
-| HPO | Optuna |
-| Inference API | FastAPI + Uvicorn |
-| Demo UI | Streamlit |
-| Containerization | Docker Compose |
-| Package manager | uv |
-| Language | Python 3.12 |
+### Pipeline & Model
+![Pipeline Architecture](docs/screenshots/pipeline.png)
+![Pipeline Model & Hyperparams](docs/screenshots/pipeline_model.png)
+
+### Monitoring
+![Monitoring](docs/screenshots/monitoring.png)
 
 ---
 
-## Planned
+
+## Roadmap
 
 - Evidently drift monitoring DAG (`monitoring_dag.py`) — detect feature/label drift from production predictions
 - Docker image published on GHCR (`ghcr.io/YBengala/multimodalai-mlops/inference:v1.0.0`) via GitHub Actions
 - CI/CD pipeline — integration tests, Docker image scanning (Trivy via GitHub Actions), automated rollback
-- Release `v1.0.0` after the above are completed
+
 
 ---
 
@@ -309,3 +265,9 @@ This project is designed as a portfolio/demo — production hardening would requ
 - **Observability** — centralized logging (Loki/ELK), infrastructure metrics (Prometheus + Grafana), alerting
 - **Performance** — inference batching, embedding cache, encoder warm-up
 - **Data** — schema validation (Great Expectations), PII/GDPR handling
+
+---
+
+## Dataset
+
+[Rakuten France Multimodal Product Classification](https://www.kaggle.com/datasets/evgeniyasergeeva/rakuten-france-multimodal-product-classification) — Kaggle
