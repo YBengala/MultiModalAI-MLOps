@@ -1,0 +1,12 @@
+.git
+.github
+data/
+notebooks/
+tests/
+models/
+*.md
+uv.lock
+__pycache__
+.env
+.vscode
+.idea

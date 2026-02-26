@@ -9,18 +9,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+RUN pip install --no-cache-dir torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir \
     fastapi==0.129.0 \
-    uvicorn[standard] \
-    python-multipart \
+    uvicorn[standard]==0.41.0 \
+    python-multipart==0.0.22 \
     mlflow==3.6.0 \
-    sentence-transformers \
-    timm \
-    Pillow \
-    pydantic-settings \
-    python-dotenv \
-    boto3
+    sentence-transformers==5.1.2 \
+    timm==1.0.22 \
+    Pillow==12.0.0 \
+    pydantic-settings==2.12.0 \
+    python-dotenv==1.2.1 \
+    boto3>=1.37.2
 
 USER appuser
 

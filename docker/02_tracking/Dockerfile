@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 RUN useradd --create-home mlflow
 
@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --no-cache-dir \
     mlflow==3.6.0 \
-    boto3 \
-    psycopg2-binary
+    boto3>=1.37.2 \
+    psycopg2-binary==2.9.10
 
 USER mlflow
 

@@ -74,7 +74,13 @@ class Settings(BaseSettings):
     MLFLOW_EXPERIMENT_NAME: str = "Rakuten_Multimodal"
     MLFLOW_TRAINING_EXPERIMENT_NAME: str = "Rakuten_Multimodal_Training"
     MLFLOW_TUNING_EXPERIMENT_NAME: str = "Rakuten_Multimodal_Tuning"
+    MLFLOW_MONITORING_EXPERIMENT_NAME: str = "Rakuten_Multimodal_Monitoring"
     MLFLOW_TRACKING_URI: str = "http://localhost:5000"
+
+    # ==========================
+    # INFERENCE API
+    # ==========================
+    INFERENCE_API_URL: str = "http://localhost:8000"
 
     # ==========================
     # MINIO SETTINGS

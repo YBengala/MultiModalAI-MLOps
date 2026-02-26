@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import random
+import subprocess
 from typing import Any
 
 import mlflow
@@ -150,7 +151,7 @@ def train_pipeline(
     le.fit(all_known_codes)
     y = le.transform(df["prdtypecode"].astype(int).values)
 
-    # label index -> libellé
+    # label index -> label
     idx_to_label = {
         i: category_mapping[str(code)] for i, code in enumerate(le.classes_)
     }
@@ -269,6 +270,19 @@ def train_pipeline(
         # Training data statistics
         if data_run_id:
             mlflow.set_tag("data_run_id", data_run_id)
+        try:
+            repo_dir = os.environ.get("REPO_DIR", ".")
+            git_sha = (
+                subprocess.check_output(
+                    ["git", "-C", repo_dir, "rev-parse", "--short", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                )
+                .decode()
+                .strip()
+            )
+            mlflow.set_tag("git_sha", git_sha)
+        except Exception:
+            pass
         mlflow.log_params(
             {
                 "data_nb_samples": len(df),
@@ -399,6 +413,12 @@ def train_pipeline(
     # Register model and auto-promote after the run is fully closed
     if trial is None and current_run_id is not None:
         client = mlflow.tracking.MlflowClient()
+
+        # Ensure the registered model exists (first run after reset)
+        try:
+            client.create_registered_model("Rakuten_Multimodal_Fusion")
+        except Exception:
+            pass  # Already exists
 
         # Register the model version from the closed run
         artifact_path = f"model_{data_run_id}" if data_run_id else "model"

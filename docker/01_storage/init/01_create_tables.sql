@@ -32,8 +32,22 @@ CREATE TABLE IF NOT EXISTS products_processed (
 CREATE INDEX IF NOT EXISTS idx_processed_prdtypecode ON products_processed(prdtypecode);
 CREATE INDEX IF NOT EXISTS idx_processed_batch ON products_processed(batch_id);
 
--- Latest version of each product (most recent batch wins)
 CREATE OR REPLACE VIEW products_latest AS
 SELECT DISTINCT ON (productid) *
 FROM products_processed
 ORDER BY productid, dt_processed DESC;
+
+CREATE TABLE IF NOT EXISTS predictions_prod (
+    id              SERIAL PRIMARY KEY,
+    designation     TEXT NOT NULL,
+    description     TEXT,
+    predicted_class VARCHAR(100) NOT NULL,
+    confidence      FLOAT NOT NULL,
+    all_scores      JSONB,
+    model_version   VARCHAR(50),
+    has_image       BOOLEAN DEFAULT FALSE,
+    dt_predicted    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_pred_class ON predictions_prod(predicted_class);
+CREATE INDEX IF NOT EXISTS idx_pred_dt ON predictions_prod(dt_predicted);
